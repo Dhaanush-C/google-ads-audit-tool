@@ -17,7 +17,7 @@ export default async function handler(req, res) {
           "X-Title": "Google Ads Audit Tool",
         },
         body: JSON.stringify({
-          model: "mistralai/mistral-7b-instruct:free",
+          model: "openrouter/free",
           messages: [
             {
               role: "system",
