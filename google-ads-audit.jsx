@@ -3,11 +3,15 @@ const { useState } = React;
 const parseCSV = (file) => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => resolve(e.target.result);
+    reader.onload = (e) => {
+      const text = e.target.result || "";
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      const headers = lines[0] || "";
+      const rows = lines.slice(1, 201);
+      resolve([headers, ...rows].join("\n"));
+    };
     reader.onerror = reject;
-    reader.readAsText(file);
-  });
-};
+    reader.readAsText(fil
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
