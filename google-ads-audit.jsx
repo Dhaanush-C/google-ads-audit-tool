@@ -102,6 +102,28 @@ Give a short Google Ads audit summary:
           />
         </div>
 
+        <div style={{ marginTop: "24px", marginBottom: "24px" }}>
+          <h3 style={{ marginBottom: "16px" }}>Upload Google Ads Reports</h3>
+          {["Search Terms Report", "Ad Report", "Search Keyword Report", "Campaign Report"].map((label) => (
+            <div key={label} style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px" }}>{label}</label>
+              <input
+                type="file"
+                accept=".csv,.xlsx"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "1px solid #334155",
+                  background: "#060b12",
+                  color: "white",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          ))}
+        </div>
+
         <button
           onClick={runAudit}
           style={{
