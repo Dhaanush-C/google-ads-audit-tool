@@ -17,12 +17,12 @@ export default async function handler(req, res) {
           "X-Title": "Google Ads Audit Tool",
         },
         body: JSON.stringify({
-          model: "google/gemma-2-9b-it:free",
+          model: "mistralai/mistral-7b-instruct:free",
           messages: [
             {
               role: "system",
               content:
-                "You are a senior Google Ads audit expert. Give clear, practical insights.",
+                "You are a senior Google Ads audit expert. Give clear, practical insights in simple bullet points.",
             },
             {
               role: "user",
@@ -37,7 +37,10 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error: data?.error?.message || "OpenRouter request failed",
+        error:
+          data?.error?.message ||
+          data?.message ||
+          "OpenRouter request failed",
       });
     }
 
