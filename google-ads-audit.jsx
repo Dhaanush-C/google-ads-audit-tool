@@ -7,10 +7,38 @@ function App() {
   const [clientName, setClientName] = useState("");
   const [message, setMessage] = useState("");
 
-  const runAudit = () => {
-    setMessage(
-      `Audit ready for ${clientName || "your client"}. Next, we'll connect the OpenAI API.`
-    );
+  const runAudit = async () => {
+    setMessage("Running AI audit...");
+
+    try {
+      const prompt = `
+        Agency: ${agencyName}
+        Client: ${clientName}
+
+        Give a short Google Ads audit summary:
+        - overall account health
+        - 3 key risks
+        - 3 recommendations
+      `;
+
+      const response = await fetch("/api/audit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Audit failed");
+      }
+
+      setMessage(data.result);
+    } catch (error) {
+      setMessage("Error: " + error.message);
+    }
   };
 
   return (
