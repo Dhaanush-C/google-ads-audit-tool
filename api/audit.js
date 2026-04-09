@@ -7,20 +7,26 @@ export default async function handler(req, res) {
     const { prompt } = req.body;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+      "https://openrouter.ai/api/v1/chat/completions",
       {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "HTTP-Referer": "https://google-ads-audit-tool.vercel.app",
+          "X-Title": "Google Ads Audit Tool",
         },
         body: JSON.stringify({
-          contents: [
+          model: "meta-llama/llama-3.1-8b-instruct:free",
+          messages: [
             {
-              parts: [
-                {
-                  text: `You are a senior Google Ads audit expert. Give clear, practical insights.\n\n${prompt}`,
-                },
-              ],
+              role: "system",
+              content:
+                "You are a senior Google Ads audit expert. Give clear, practical insights.",
+            },
+            {
+              role: "user",
+              content: prompt,
             },
           ],
         }),
@@ -31,12 +37,12 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       return res.status(response.status).json({
-        error: data?.error?.message || "Gemini request failed",
+        error: data?.error?.message || "OpenRouter request failed",
       });
     }
 
     const content =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text || "No response received.";
+      data?.choices?.[0]?.message?.content || "No response received.";
 
     return res.status(200).json({ result: content });
   } catch (error) {
