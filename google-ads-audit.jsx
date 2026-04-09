@@ -5,13 +5,18 @@ const parseCSV = (file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       const text = e.target.result || "";
-      const lines = text.split(/\r?\n/).filter(Boolean);
+      const lines = text.split(/
+?
+/).filter(Boolean);
       const headers = lines[0] || "";
       const rows = lines.slice(1, 201);
-      resolve([headers, ...rows].join("\n"));
+      resolve([headers, ...rows].join("
+"));
     };
     reader.onerror = reject;
-    reader.readAsText(fil
+    reader.readAsText(file);
+  });
+};
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
