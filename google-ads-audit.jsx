@@ -1,41 +1,11 @@
 const { useState } = React;
 
-const parseCSV = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      const text = e.target.result || "";
-      const lines = text.split(/\r?\n/).filter(Boolean);
-      const headers = lines[0] || "";
-      const rows = lines.slice(1, 201);
-
-      resolve([headers, ...rows].join("\n"));
-    };
-
-    reader.onerror = reject;
-    reader.readAsText(file);
-  });
-};
-
-const root = ReactDOM.createRoot(document.getElementB
+const root = ReactDOM.createRoot(document.getElementById("root"));
 
 function App() {
   const [agencyName, setAgencyName] = useState("");
   const [clientName, setClientName] = useState("");
   const [message, setMessage] = useState("");
-  const [files, setFiles] = useState({
-    searchTerms: null,
-    adReport: null,
-    keywordReport: null,
-    campaignReport: null,
-  });
-
-  const handleFileChange = async (key, file) => {
-    if (!file) return;
-    const content = await parseCSV(file);
-    setFiles((prev) => ({ ...prev, [key]: content }));
-  };
 
   const runAudit = async () => {
     setMessage("Running AI audit...");
@@ -45,33 +15,29 @@ function App() {
 Agency: ${agencyName}
 Client: ${clientName}
 
-Analyze each uploaded Google Ads CSV report separately and then provide a combined audit.
+Create a highly detailed Google Ads audit report in professional agency style.
 
-Search Terms Report:
-${files.searchTerms || "Not uploaded"}
-
-Ad Report:
-${files.adReport || "Not uploaded"}
-
-Search Keyword Report:
-${files.keywordReport || "Not uploaded"}
-
-Campaign Report:
-${files.campaignReport || "Not uploaded"}
-
-Create a detailed audit report with:
+Structure:
 1. Executive Summary
-2. Health Score out of 100
-3. Findings from each report separately
-4. Wasted spend / irrelevant traffic issues
-5. Keyword gaps
-6. Ad copy issues
-7. Campaign structure issues
-8. Tracking / conversion issues
-9. Quick wins (7 days)
-10. 30 / 90 day recommendations
+2. Overall Account Health Score out of 100
+3. Campaign structure issues
+4. Keyword and search term waste analysis
+5. Ad copy / CTR observations
+6. Landing page observations
+7. Conversion tracking issues
+8. Budget wastage areas
+9. Competitor risks
+10. Quick wins (next 7 days)
+11. Medium-term improvements (30 days)
+12. Long-term scaling recommendations (90 days)
 
-Keep it client-ready with clear headings and bullet points.
+Make it client-ready:
+- clear headings
+- bullet points
+- practical recommendations
+- explain impact in simple language
+
+If no real data is given, clearly mention assumptions but still provide useful strategic insights.
       `;
 
       const response = await fetch("/api/audit", {
@@ -156,27 +122,25 @@ Keep it client-ready with clear headings and bullet points.
         </div>
 
         <div style={{ marginTop: "24px", marginBottom: "24px" }}>
-          <h3 style={{ marginBottom: "16px" }}>Upload CSV Reports</h3>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Search Terms Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("searchTerms", e.target.files[0])} />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Ad Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("adReport", e.target.files[0])} />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Search Keyword Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("keywordReport", e.target.files[0])} />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Campaign Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("campaignReport", e.target.files[0])} />
-          </div>
+          <h3 style={{ marginBottom: "16px" }}>Upload Google Ads Reports</h3>
+          {["Search Terms Report", "Ad Report", "Search Keyword Report", "Campaign Report"].map((label) => (
+            <div key={label} style={{ marginBottom: "16px" }}>
+              <label style={{ display: "block", marginBottom: "8px" }}>{label}</label>
+              <input
+                type="file"
+                accept=".csv,.xlsx"
+                style={{
+                  width: "100%",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "1px solid #334155",
+                  background: "#060b12",
+                  color: "white",
+                  boxSizing: "border-box",
+                }}
+              />
+            </div>
+          ))}
         </div>
 
         <button
