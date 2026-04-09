@@ -17,7 +17,7 @@ export default async function handler(req, res) {
           "X-Title": "Google Ads Audit Tool",
         },
         body: JSON.stringify({
-          model: "meta-llama/llama-3.1-8b-instruct:free",
+          model: "google/gemma-2-9b-it:free",
           messages: [
             {
               role: "system",
