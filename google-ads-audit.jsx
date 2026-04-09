@@ -15,10 +15,29 @@ function App() {
 Agency: ${agencyName}
 Client: ${clientName}
 
-Give a short Google Ads audit summary:
-- overall account health
-- 3 key risks
-- 3 recommendations
+Create a highly detailed Google Ads audit report in professional agency style.
+
+Structure:
+1. Executive Summary
+2. Overall Account Health Score out of 100
+3. Campaign structure issues
+4. Keyword and search term waste analysis
+5. Ad copy / CTR observations
+6. Landing page observations
+7. Conversion tracking issues
+8. Budget wastage areas
+9. Competitor risks
+10. Quick wins (next 7 days)
+11. Medium-term improvements (30 days)
+12. Long-term scaling recommendations (90 days)
+
+Make it client-ready:
+- clear headings
+- bullet points
+- practical recommendations
+- explain impact in simple language
+
+If no real data is given, clearly mention assumptions but still provide useful strategic insights.
       `;
 
       const response = await fetch("/api/audit", {
