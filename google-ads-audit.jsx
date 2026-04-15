@@ -1,220 +1,116 @@
 const { useState } = React;
 
-const parseCSV = (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+function AuditTool() {
+  const [agency, setAgency] = useState("");
+  const [client, setClient] = useState("");
+  const [file, setFile] = useState(null);
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
 
-    reader.onload = (e) => {
-      const text = e.target.result || "";
-      const lines = text.split(/\r?\n/).filter(Boolean);
-      const headers = lines[0] || "";
-      const rows = lines.slice(1, 201);
+  // READ CSV
+  const readCSV = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
 
-      resolve([headers, ...rows].join("\n"));
-    };
+      reader.onload = (e) => {
+        const text = e.target.result || "";
+        const lines = text.split("\n").slice(0, 200);
+        resolve(lines.join("\n"));
+      };
 
-    reader.onerror = reject;
-    reader.readAsText(file);
-  });
-};
-
-const root = ReactDOM.createRoot(document.getElementById("root"));
-
-function App() {
-  const [agencyName, setAgencyName] = useState("");
-  const [clientName, setClientName] = useState("");
-  const [message, setMessage] = useState("");
-  const [files, setFiles] = useState({
-    searchTerms: null,
-    adReport: null,
-    keywordReport: null,
-    campaignReport: null,
-  });
-
-  const handleFileChange = async (key, file) => {
-    if (!file) return;
-    const content = await parseCSV(file);
-    setFiles((prev) => ({ ...prev, [key]: content }));
+      reader.readAsText(file);
+    });
   };
 
+  // RUN AUDIT
   const runAudit = async () => {
-    setMessage("Running AI audit...");
+    if (!file) return alert("Upload CSV");
 
-    try {
-      const prompt = `
-Agency: ${agencyName}
-Client: ${clientName}
+    setLoading(true);
+    setProgress(10);
 
-Analyze each uploaded Google Ads CSV report separately and then provide a combined audit.
+    const csvData = await readCSV(file);
+    setProgress(40);
 
-Search Terms Report:
-${files.searchTerms || "Not uploaded"}
+    const res = await fetch("/api/audit", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        agency,
+        client,
+        data: csvData,
+      }),
+    });
 
-Ad Report:
-${files.adReport || "Not uploaded"}
+    setProgress(70);
 
-Search Keyword Report:
-${files.keywordReport || "Not uploaded"}
+    const json = await res.json();
 
-Campaign Report:
-${files.campaignReport || "Not uploaded"}
+    setResult(json.result || json.error);
+    setProgress(100);
+    setLoading(false);
+  };
 
-For EACH uploaded file, first analyze it independently and give specific findings based only on that report.
+  // DOWNLOAD HTML
+  const downloadHTML = () => {
+    const blob = new Blob([result], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
 
-Required structure:
-1. Executive Summary
-2. Overall Health Score out of 100
-3. Search Terms Report insights (wasted spend, negatives, irrelevant queries)
-4. Ad Report insights (CTR, weak ads, creative fatigue)
-5. Search Keyword Report insights (match types, keyword gaps, CPC inefficiencies)
-6. Campaign Report insights (budget allocation, CPA, ROAS, structure)
-7. Cross-report patterns and root causes
-8. Top wasted spend areas
-9. Tracking / conversion issues
-10. Quick wins (next 7 days)
-11. 30-day action plan
-12. 90-day scaling roadmap
-
-Be very specific. Quote examples from uploaded rows where possible. Keep it client-ready with clear headings and bullet points.
-      `;
-
-      const response = await fetch("/api/audit", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Audit failed");
-      }
-
-      setMessage(data.result || "Audit completed.");
-    } catch (error) {
-      setMessage("Error: " + error.message);
-    }
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "google-ads-audit.html";
+    a.click();
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#060b12",
-        color: "#f0f4ff",
-        fontFamily: "Arial, sans-serif",
-        padding: "40px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          background: "#0a111c",
-          border: "1px solid #1e293b",
-          borderRadius: "16px",
-          padding: "32px",
-        }}
-      >
-        <h1 style={{ marginTop: 0 }}>Google Ads Audit Tool</h1>
-        <p style={{ color: "#94a3b8" }}>Step 1: basic app setup is working.</p>
+    <div className="container">
+      <h1>Google Ads Audit Tool</h1>
 
-        <div style={{ marginBottom: "16px" }}>
-          <label>Agency Name</label>
-          <input
-            value={agencyName}
-            onChange={(e) => setAgencyName(e.target.value)}
-            placeholder="Your agency"
-            style={{
-              width: "100%",
-              marginTop: "8px",
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #334155",
-              background: "#060b12",
-              color: "white",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
+      <input
+        placeholder="Agency Name"
+        value={agency}
+        onChange={(e) => setAgency(e.target.value)}
+      />
 
-        <div style={{ marginBottom: "16px" }}>
-          <label>Client Name</label>
-          <input
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-            placeholder="Client"
-            style={{
-              width: "100%",
-              marginTop: "8px",
-              padding: "12px",
-              borderRadius: "8px",
-              border: "1px solid #334155",
-              background: "#060b12",
-              color: "white",
-              boxSizing: "border-box",
-            }}
-          />
-        </div>
+      <input
+        placeholder="Client Name"
+        value={client}
+        onChange={(e) => setClient(e.target.value)}
+      />
 
-        <div style={{ marginTop: "24px", marginBottom: "24px" }}>
-          <h3 style={{ marginBottom: "16px" }}>Upload CSV Reports</h3>
+      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
 
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Search Terms Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("searchTerms", e.target.files[0])} />
-          </div>
+      <button onClick={runAudit} disabled={loading}>
+        {loading ? "Generating..." : "Run Audit"}
+      </button>
 
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Ad Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("adReport", e.target.files[0])} />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Search Keyword Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("keywordReport", e.target.files[0])} />
-          </div>
-
-          <div style={{ marginBottom: "16px" }}>
-            <label style={{ display: "block", marginBottom: "8px" }}>Campaign Report</label>
-            <input type="file" accept=".csv" onChange={(e) => handleFileChange("campaignReport", e.target.files[0])} />
-          </div>
-        </div>
-
-        <button
-          onClick={runAudit}
-          style={{
-            background: "#2563eb",
-            color: "white",
-            border: "none",
-            padding: "12px 20px",
-            borderRadius: "8px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
-        >
-          Run Demo Audit
-        </button>
-
-        {message && (
+      {/* PROGRESS BAR */}
+      {loading && (
+        <div className="progress">
           <div
-            style={{
-              marginTop: "20px",
-              padding: "16px",
-              background: "rgba(37,99,235,.1)",
-              border: "1px solid rgba(37,99,235,.25)",
-              borderRadius: "10px",
-              whiteSpace: "pre-wrap",
-            }}
-          >
-            {message}
-          </div>
-        )}
-      </div>
+            className="progress-bar"
+            style={{ width: progress + "%" }}
+          />
+        </div>
+      )}
+
+      {/* DOWNLOAD BUTTON */}
+      {result && (
+        <button onClick={downloadHTML}>
+          Download Report
+        </button>
+      )}
+
+      {/* HTML OUTPUT */}
+      <div
+        className="result"
+        dangerouslySetInnerHTML={{ __html: result }}
+      />
     </div>
   );
 }
 
-root.render(<App />);
+ReactDOM.render(<AuditTool />, document.getElementById("root"));
