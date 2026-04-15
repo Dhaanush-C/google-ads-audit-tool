@@ -3,7 +3,12 @@ const { useState } = React;
 function AuditTool() {
   const [agency, setAgency] = useState("");
   const [client, setClient] = useState("");
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState({
+  searchTerms: null,
+  adReport: null,
+  keywordReport: null,
+  campaignReport: null,
+});
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -24,35 +29,45 @@ function AuditTool() {
   };
 
   // RUN AUDIT
-  const runAudit = async () => {
-    if (!file) return alert("Upload CSV");
+ const runAudit = async () => {
+  setLoading(true);
+  setProgress(20);
 
-    setLoading(true);
-    setProgress(10);
+  const csvs = await readAllCSVs();
+  setProgress(50);
 
-    const csvData = await readCSV(file);
-    setProgress(40);
+  const combinedData = `
+SEARCH TERMS:
+${csvs.searchTerms}
 
-    const res = await fetch("/api/audit", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        agency,
-        client,
-        data: csvData,
-      }),
-    });
+AD REPORT:
+${csvs.adReport}
 
-    setProgress(70);
+KEYWORD REPORT:
+${csvs.keywordReport}
 
-    const json = await res.json();
+CAMPAIGN REPORT:
+${csvs.campaignReport}
+`;
 
-    setResult(json.result || json.error);
-    setProgress(100);
-    setLoading(false);
-  };
+  const res = await fetch("/api/audit", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      agency,
+      client,
+      data: combinedData,
+    }),
+  });
+
+  const json = await res.json();
+
+  setResult(json.result || json.error || "No response received");
+  setProgress(100);
+  setLoading(false);
+};
 
   // DOWNLOAD HTML
   const downloadHTML = () => {
@@ -81,7 +96,17 @@ function AuditTool() {
         onChange={(e) => setClient(e.target.value)}
       />
 
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} />
+      <input type="file" onChange={(e) => setFiles(prev => ({...prev, searchTerms: e.target.files[0]}))} />
+<p>Search Terms Report</p>
+
+<input type="file" onChange={(e) => setFiles(prev => ({...prev, adReport: e.target.files[0]}))} />
+<p>Ad Report</p>
+
+<input type="file" onChange={(e) => setFiles(prev => ({...prev, keywordReport: e.target.files[0]}))} />
+<p>Search Keyword Report</p>
+
+<input type="file" onChange={(e) => setFiles(prev => ({...prev, campaignReport: e.target.files[0]}))} />
+<p>Campaign Report</p>
 
       <button onClick={runAudit} disabled={loading}>
         {loading ? "Generating..." : "Run Audit"}
