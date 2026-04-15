@@ -20,7 +20,7 @@ function AuditTool() {
 
       reader.onload = (e) => {
         const text = e.target.result || "";
-        const lines = text.split("\n").slice(0, 200);
+        const lines = text.split("\n").slice(0, 30);
         resolve(lines.join("\n"));
       };
 
